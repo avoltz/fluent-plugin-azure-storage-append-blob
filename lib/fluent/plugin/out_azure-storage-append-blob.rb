@@ -115,10 +115,23 @@ module Fluent
           tmp.unlink
         end
       end
+
+      def container_exists?(container)
+        begin
+          @bs.get_container_properties(container)
+        rescue Azure::Core::Http::HTTPError => ex
+          if ex.status_code == 404 # container does not exist
+            return false
+          else
+            raise
+          end
+        end
+        return true
+      end
   
       private
       def ensure_container
-        if ! @bs.list_containers.find { |c| c.name == @azure_container }
+        if ! container_exists? @azure_container
           if @auto_create_container
             @bs.create_container(@azure_container)
           else
