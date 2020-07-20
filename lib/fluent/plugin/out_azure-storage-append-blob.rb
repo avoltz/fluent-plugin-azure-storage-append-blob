@@ -22,6 +22,7 @@ module Fluent
       config_param :azure_storage_account, :string, :default => nil
       config_param :azure_storage_access_key, :string, :default => nil, :secret => true
       config_param :azure_storage_sas_token, :string, :default => nil, :secret => true
+      config_param :azure_storage_access_key_env, :string, :default => nil
       config_param :azure_container, :string, :default => nil
       config_param :azure_object_key_format, :string, :default => "%{path}%{time_slice}-%{index}.log"
       config_param :auto_create_container, :bool, :default => true
@@ -58,8 +59,8 @@ module Fluent
           raise ConfigError, 'azure_container is needed'
         end
 
-        if @azure_storage_access_key.nil? && @azure_storage_sas_token.nil?
-          raise ConfigError, "either 'azure_storage_access_key' or 'azure_storage_sas_token' parameter must be provided"
+        if @azure_storage_access_key.nil? && @azure_storage_sas_token.nil? && @azure_storage_access_key_env.nil?
+          raise ConfigError, "'azure_storage_access_key' or 'azure_storage_sas_token' or 'azure_storage_access_key_env' parameter must be provided"
         end
       end
   
@@ -74,6 +75,10 @@ module Fluent
 
         if !@azure_storage_access_key.nil?
           @bs_params.merge!({storage_access_key: @azure_storage_access_key})
+        end
+
+        if !@azure_storage_access_key_env.nil?
+          @bs_params.merge!({storage_access_key: ENV[@azure_storage_access_key_env]})
         end
 
         if !@azure_storage_sas_token.nil?
